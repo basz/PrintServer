@@ -1,0 +1,8 @@
+Hi!
+
+This project exposes CUPS printers via a REST interface.
+
+This services accepts PDF files to be printed to any pre-defined printers. It has been designed for a specific environment, OSX with CUPS
+
+It is simple and incomplete...
+
