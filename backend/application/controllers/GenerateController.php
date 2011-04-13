@@ -77,7 +77,7 @@ class GenerateController extends Zend_Controller_Action {
         return (object) array(
             'date' => '21 mrt 2011',
             'tableNumber' => '34',
-            'remark' => 'Suggesties of opmerkingen? info@brasserieharkema.nl',
+            'remark' => 'Remark? info@mydomain.com',
             'items' => array(
                 (object) array('amount' => '1', 'description' => 'Thee', 'price' => '2.146'),
                 (object) array('amount' => '11', 'description' => 'Bier', 'price' => '3.123'),
@@ -107,7 +107,7 @@ class GenerateController extends Zend_Controller_Action {
             default:
                 return (object) array(
                     'tableNumber' => '34',
-                    'remark' => 'Suggesties of opmerkingen? info@brasserieharkema.nl',
+                    'remark' => 'Remark? info@mydomain.com',
                     'items' => array(
                         (object) array('amount' => '1', 'gender' => 'v', 'description' => 'Thee'),
                         (object) array('amount' => '11', 'gender' => '', 'description' => 'Bier', 'remark' => 'Koud'),
