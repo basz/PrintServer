@@ -1,0 +1,20 @@
+<?php
+$this->headScript()
+     ->setFile($this->baseUrl('resources/js/jquery-1.5.1.min.js'))
+     ->captureStart();
+?>
+
+$(document).ready(function() {
+    $('form#submit').bind('submit', function() {
+        var printer_id = $('select#printer_id option:selected', this).attr('value');
+        var action = $('input#action', this).val();
+
+        if (printer_id)
+            action += '/' + printer_id;
+
+        $('form#submit').attr('action', action);
+    });
+});
+
+<?php $this->headScript()->captureEnd(); ?>
+<?php echo $this->form; ?>

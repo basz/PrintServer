@@ -1,0 +1,115 @@
+
+<h2 id="Express">Print Server</h2>
+
+<a name="introduction"></a>
+<h3>Introduction</h3>
+<p>This project exposes CUPS printers via a <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">REST</a> interface.</p>
+<p>This services accepts PDF files to be printed on any pre-defined printers. It has been designed for a specific environment, OSX with CUPS</p>
+
+<a name="security"></a>
+<h3>Security</h3>
+<p>No security features are implemented, so only use this software on an environment were you can trust it's users.</p>
+<p>I recommend to restrict access to the LAN via a .htaccess file</p>
+<pre>
+&lt;limit GET&gt;
+    deny from all
+    allow from 127.0.0.1
+    allow from 192.168.
+    allow from 10.0.
+&lt;/limit&gt;</pre>
+
+<a name="api"></a>
+<h3>Api</h3>
+
+<p>In general all request will respond with a HTTP/1.1 200 OK;</p>
+<p>When the client sends an <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">Accept</a> header with 'application/json' as value with the request, the API will respond in a JSON format. Alternatively you can add ?format=json to the request url.</p>
+<pre>{
+  "result"   : true,
+  "response" : [mixed]
+}</pre>
+<p>When an error occures, i encode it like so.</p>
+<pre>{
+  "result"   : false,
+  "error"    : { message : (string), code : (int) }
+}</pre>
+<p>The following error messages/codes may be returned</p>
+<em>error param</em>
+<ul>
+    <li>unknown error / -1</li>
+</ul>
+<h4>General status</h4>
+<p>Poll for problems with any printer</p>
+<em>request</em>
+<pre><strong>GET</strong> <a href="<?php echo $this->url(array(), 'api_status'); ?>">/status</a></pre>
+<em>response param</em>
+<pre>
+    (object) { "status" : "OK" || "PROBLEMATIC" }
+    ||
+    (object) { "status" : "PROBLEMATIC",
+               "detail" : (array) ["some reason", ...]
+             }
+</pre>
+
+<h4>Printer status</h4>
+<p>Poll for problems with a specific printer</p>
+<em>request</em>
+<pre><strong>GET</strong> <a href="<?php echo $this->url(array('printer_id'=>8), 'api_printer-status'); ?>">/status/printer/[printer_id]</a></pre>
+<em>response param</em>
+<pre>
+(object) { "status" : "OK" || "PROBLEMATIC" }
+||
+(object) { "status" : "PROBLEMATIC",
+           "detail" : (array) ["some reason", ...]
+         }</pre>
+
+<p>The following error messages/codes may be returned</p>
+<em>error param</em>
+<ul>
+    <li>undefined printer / 1</li>
+</ul>
+
+<h4>Defined printers</h4>
+<p>Get a list of defined printers</p>
+<em>request</em>
+<pre><strong>GET</strong> <a href="<?php echo $this->url(array(), 'api_printers'); ?>">/printers</a></pre>
+<em>response param</em>
+<pre> (array) [ "printer_id", "printer_id", ... ]</pre>
+
+<h4>Submit a job to be printed</h4>
+<p>Post a PDF<br/>Data must be encoded as <em>multipart/form-data</em> and the variable name for the document must be <em>document</em>.</p>
+
+<em>request</em>
+<pre><strong>POST</strong> <a href="<?php echo $this->url(array('printer_id'=>null), 'api_submit'); ?>">/submit/[printer_id]</a></pre>
+
+
+encoded as <em>multipart/form-data</em>
+form data must contain a <em>document</em> variable which contains the document data
+</pre>
+<em>response param</em>
+<pre> (int) job_id</pre>
+
+<p>The following error messages/codes may be returned</p>
+<em>error param</em>
+<ul>
+    <li>document missing / 3</li>
+    <li>document not a PDF / 4</li>
+    <li>undefined printer / 1</li>
+</ul>
+
+<h4>Job status</h4>
+<p>Get the status of a specific job</p>
+<em>request</em>
+<pre><strong>GET</strong> <a href="<?php echo $this->url(array('job_id'=>8), 'api_job-status'); ?>">/status/job/[job_id]</a></pre>
+<em>response param</em>
+<pre>
+(object) { "status" : "ACCEPTED" || "PRINTED" }
+||
+(object) { "status" : "PROBLEMATIC",
+           "detail" : (array) ["some reason", ...]
+         }</pre>
+
+<p>The following error messages/codes may be returned</p>
+<em>error param</em>
+<ul>
+    <li>unknown job / 2</li>
+</ul>

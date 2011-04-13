@@ -1,0 +1,23 @@
+
+<div<?php echo ($this->showAlert) ? ' class="alert"' : ''; ?>>
+<?php unset($this->showAlert); ?>
+
+    
+<?php if (!$this->result): ?>
+<h2>Error</h2>
+
+<pre>
+    <?php echo Zend_Json::encode($this); ?>
+</pre>
+
+<?php else: ?>
+
+<h2>Response</h2>
+
+<pre>
+    <?php echo Zend_Json::encode($this); ?>
+</pre>
+
+<?php endif; ?>
+
+</div>

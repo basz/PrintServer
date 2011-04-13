@@ -1,0 +1,14 @@
+
+php_value post_max_size 50M
+php_value upload_max_filesize 10M
+
+SetEnv APPLICATION_ENV development
+
+RewriteEngine On
+RewriteBase /~bas/harkema-printserver/
+
+RewriteCond %{REQUEST_FILENAME} -s [OR]
+RewriteCond %{REQUEST_FILENAME} -l [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^.*$ - [NC,L]
+RewriteRule ^.*$ index.php [NC,L]
