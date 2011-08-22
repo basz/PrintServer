@@ -163,9 +163,10 @@ class PrintMaster {
         array_shift($output);
        // print_r($output);
         foreach($output as $line) {
-            if (preg_match('/^device for (.*?): (.*)$/', $line, $m))
-                print_r($m);
-            $result[] = (object) array('name'=>$m[1], 'uri'=>$m[2]);
+            if (preg_match('/^device for (.*?): (.*)$/', $line, $m)) {
+                //print_r($m);
+                $result[] = (object) array('name'=>$m[1], 'uri'=>$m[2]);
+            }
         }
 
         return $result;
