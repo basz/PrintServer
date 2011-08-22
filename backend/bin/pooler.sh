@@ -24,10 +24,8 @@ trap onexit 1 2 3 15 ERR
 
 PREFIX=`dirname $(cd ${0%/*} && echo $PWD/${0##*/})`
 
-# find php: pear first, command -v second, straight up php lastly
-if test "/opt/local/bin/php" != '@'php_bin'@'; then
-    PHP_BIN="/opt/local/bin/php"
-elif command -v php 1>/dev/null 2>/dev/null; then
+# find php by: command -v or straight up php
+if command -v php 1>/dev/null 2>/dev/null; then
     PHP_BIN=`command -v php`
 else
     PHP_BIN=php
@@ -55,6 +53,6 @@ then
    done
 
 else
-   #echo "pooling allready in place"
+   #echo "pooling already/still in place"
    exit 0
 fi
