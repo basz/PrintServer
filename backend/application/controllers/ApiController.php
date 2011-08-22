@@ -53,8 +53,11 @@ class ApiController extends Zend_Controller_Action {
                         $existInCups = true;
                         break;
                     }
-                if (!$existInCups)
+                    
+                if (!$existInCups) {
+                    Zend_Debug::dump($cupsName, 'CONFIGURED QUEUE DOES NOT EXIST WITHIN CUPS');
                     continue;
+                }
 
                 // create printer definition
                 $printer = new Application\Model\Entity\PrinterDefinition();
@@ -123,9 +126,7 @@ class ApiController extends Zend_Controller_Action {
     public function printerStatusAction() {
         $this->view->headMeta()->appendHttpEquiv('Refresh', '10;URL=' . $this->view->url());
 
-
-
-        $this->_forward('envelope', null, null, array('result' => true, 'response' => (object) array('status' => 'OK')));
+        $this->_forward('envelope', null, null, array('result' => true, 'response' => (object) array('status' => 'NOT-YET-IMPLEMENTED')));
     }
 
     /**
@@ -197,6 +198,9 @@ class ApiController extends Zend_Controller_Action {
      * @throws unknown job / 2
      */
     public function jobStatusAction() {
+        $this->_forward('envelope', null, null, array('result' => true, 'response' => (object) array('status' => 'NOT-YET-IMPLEMENTED')));
+        return;
+
         $job_id = $this->getRequest()->getParam('job_id', null);
 
         $job = $this->_em->find('Application\Model\Entity\PrinterJob', $job_id);
