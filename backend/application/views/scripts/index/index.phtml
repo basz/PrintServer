@@ -17,6 +17,32 @@
     allow from 192.168.
     allow from 10.0.
 &lt;/limit&gt;</pre>
+<p>To get a default apache installation to accept .htaccess directives its configuration must be changed by setting the AllowOverride to All. I recommend changing this on the virtual domain configuration (os x server /etc/apache2/sites/DOMAINNAME.conf vs macports /opt/local/apache2/conf/extra/httpd-vhosts.conf) the configuration file might be located in different places.</p>
+<pre>
+&lt;Directory "/PATH/TO/WEB/ROOT"&gt;
+    ...
+    AllowOverride All
+    ...
+&lt;/Directory&gt;</pre>
+
+<a name="configuration"></a>
+<h3>Configuration</h3>
+
+<p>Find the <em>queue</em>name of the printers you wish to utilise by the Print Server. You can find this in the system preferences, the print & scan tab. Double click on a printer and choose 'Printer Setup', it's queue name is displayed.</p>
+
+<p>Bind these CUPS queue names to PrinterServer names by modifying the printer definition configuration file</p>
+<pre>/application/configs/printers.ini
+
+[production]
+printers[somenicename] = "CUPS_QUEUENAME"
+printers[someothernicename] = "CUPS_OTHER_QUEUENAME"
+...
+</pre>
+<p>Whenever you change names or CUPS printers the system needs to be reinitialised, you can do that by going <a href="<?php echo $this->url(array(), 'setup'); ?>">here</a>. You should see a message for each defined printer. Note that the only printers that exist in CUPS will be defined...</p>
+<pre>DEFINING NEW PRINTER object(Application\Model\Entity\PrinterDefinition)#137 (4) {
+   ...</pre>
+
+<p>Go <a href="<?php echo $this->url(array(), 'api_printers'); ?>">here</a> to see if your printers are now known to the print server and <a href="<?php echo $this->url(array(), 'api_status'); ?>">here</a> for general status information.</p>
 
 <a name="api"></a>
 <h3>Api</h3>
