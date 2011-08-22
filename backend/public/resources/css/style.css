@@ -32,7 +32,9 @@ a {
     -webkit-transition-duration: 0.15s;
     -webkit-transition-timing-function: ease-out; }
 a:hover {
-    opacity: 0.8; }
+    opacity: 0.8;
+    color: orangered;
+}
 
 h1, h2, h3, h4 {
     margin: 45px 0 0 0;
