@@ -10,6 +10,9 @@ class CliController extends Zend_Controller_Action
 
     public function updateStatusAction()
     {
+        
+        // check status and report when changed
+        $start = microtime(true);
         $resultCached = \Application\Model\PrintMaster::getStatus();
         $resultCurrent = \Application\Model\PrintMaster::getStatus(true);
         if (!isset($resultCached->status) || serialize($resultCached) != serialize($resultCurrent)) {
@@ -20,10 +23,22 @@ class CliController extends Zend_Controller_Action
             }
         }
 
-        $result = \Application\Model\PrintMaster::queueNewJobs();
-        if ($result > 0) {
-            echo date('Y-m-d H:i:s') . ' ' . $result . ' job(s) send to CUPS' . PHP_EOL;
+        $statusTimed = microtime(true) - $start;
+
+
+        // queue submitted jobs to cups
+        $start = microtime(true);
+        if (!DIRECT_POSTING) {
+            $result = \Application\Model\PrintMaster::queueNewJobs();
+            if ($result > 0) {
+                echo date('Y-m-d H:i:s') . ' ' . $result . ' job(s) send to CUPS' . PHP_EOL;
+            }
         }
+
+        $cupsTimed = microtime(true) - $start;
+
+        // report execution times
+        echo sprintf("execution times (mode=%s); status = %01.4fs, cups = %01.4fs", (DIRECT_POSTING) ? 'direct on pdf submition' : 'pdf\'s are posted per interval', $statusTimed, $cupsTimed). PHP_EOL;
     }
 }
 

@@ -33,17 +33,51 @@ class PrintMaster {
             return array('message'=>'document not a PDF', 'code'=>4);
         }
 
-        // create new job
-        $job = new \Application\Model\Entity\PrinterJob();
-        $job->setPrinter($printer);
-        $job->setStatus('new');
-        $job->setBasename(\pathinfo($path, \PATHINFO_BASENAME));
-        \Zend_Debug::dump($job, 'DEFINING NEW JOB');
-        $em->persist($job);
+        if (DIRECT_POSTING) {
+            // create custom printer options
+            $o = array();
+
+            if (count($pdf->pages)) {
+                $w = $pdf->pages[0]->getWidth();
+                $h = $pdf->pages[0]->getHeight();
+
+                $o['media'] = 'Custom.' . round($w / 7.2 * 2.54) . 'x' . round($h / 7.2 * 2.54) . 'mm';
+            }
+
+            $options = array();
+
+            $options[] = '-d "'.$printer->getCupsName().'"';
+            $options[] = escapeshellarg($path);
+
+            foreach ($o as $key => $value) {
+                $options[] = '-o ' . $key . '=' . $value;
+            }
+
+            $options = implode(' ', $options);
+
+            //\Zend_Debug::dump('lp ' . $options);
+            $output = '';$result = '';
+            exec('lp ' . $options, $output, $result);
+            
+            if ($result === 0 && preg_match('/^request id is ('.$printer->getCupsName().'\-[0-9]{1,8}).*$/', $output[0], $m)) {
+                return 0;
+            } else {
+                return false;
+            }        
+            
+            } else {
+            // create new job
+            $job = new \Application\Model\Entity\PrinterJob();
+            $job->setPrinter($printer);
+            $job->setStatus('new');
+            $job->setBasename(\pathinfo($path, \PATHINFO_BASENAME));
+            \Zend_Debug::dump($job, 'DEFINING NEW JOB');
+            $em->persist($job);
         
-        $em->flush();
+            $em->flush();
         
-        return $job->getId();
+            return $job->getId();
+        }
     }
     
     static function queueNewJobs() {
@@ -74,6 +108,7 @@ class PrintMaster {
                 $em->persist($job);
                 continue;
             }
+            
             if (count($pdf->pages)) {
                 $w = $pdf->pages[0]->getWidth();
                 $h = $pdf->pages[0]->getHeight();
@@ -92,12 +127,10 @@ class PrintMaster {
 
             $options = implode(' ', $options);
 
-            
-            
             //\Zend_Debug::dump('lp ' . $options);
             $output = '';$result = '';
             exec('lp ' . $options, $output, $result);
-            \Zend_Debug::dump($output, 'output'); // array("request id is Beehives_HP-336 (1 file(s))")
+            \Zend_Debug::dump($output, 'output'); // array("request id is CUPS_QUEUE_NAME-336 (1 file(s))")
             //\Zend_Debug::dump($result, 'result'); // int(0) | int(1) 
             if ($result === 0 && preg_match('/^request id is ('.$job->getPrinter()->getCupsName().'\-[0-9]{1,8}).*$/', $output[0], $m)) {
                 $job->setCupsJobId($m[1]);

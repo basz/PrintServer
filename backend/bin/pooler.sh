@@ -10,6 +10,9 @@
 #
 # *       *       *       *       *       [PREFIX]bin/pooler.sh >> [PREFIX]/data/logs/pooler.log
 
+
+
+
 # Let shell functions inherit ERR trap.  Same as `set -E'.
 set -o errtrace 
 # Trigger error when expanding unset variables.  Same as `set -u'.
@@ -24,6 +27,12 @@ trap onexit 1 2 3 15 ERR
 
 PREFIX=`dirname $(cd ${0%/*} && echo $PWD/${0##*/})`
 
+
+if [[ $EUID -ne 0 ]]; then
+  echo "`basename "$0"` must be run as root" 2>&1
+  exit 1
+fi
+
 # find php by: command -v or straight up php
 if command -v php 1>/dev/null 2>/dev/null; then
     PHP_BIN=`command -v php`
@@ -34,7 +43,7 @@ fi
 function onexit() {
     # cleanup
     local exit_status=${1:-$?}
-    echo Exiting `basename "$0"` with $exit_status
+    echo "exiting `basename "$0"` with $exit_status" 2>&1
 
     rmdir /tmp/pooler.lock
     
@@ -43,16 +52,17 @@ function onexit() {
 
 if mkdir /tmp/pooler.lock 2>/dev/null
 then
-   echo "starting pooling"
+   echo "starting "`basename "$0"`
    
    while [ 1 ];
    do 
+      echo "running pooler.php --action=cli.update-status as _www"
       sudo -u _www $PHP_BIN -d safe_mode=Off -f $PREFIX/pooler.php -- "--action=cli.update-status"
 
       sleep 5;
    done
 
 else
-   #echo "pooling already/still in place"
+   echo "exiting because pooling.sh already/still running" 2>&1
    exit 0
 fi

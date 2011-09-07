@@ -2,7 +2,21 @@
 
 class Bootstrap extends Zend_Application_Bootstrap_Bootstrap {
 
+    protected function _initSetConstants() {
+       if ($arrConstants = $this->getOption("constants"))
+            foreach ($arrConstants as $strName => $strValue)
+                if (!defined($strName))
+                    define($strName, $strValue);
+                
+                
+        if (!defined('DIRECT_POSTING'))
+            define('DIRECT_POSTING', false);
+    }
+
     protected function _initAutoload() {
+        if (!defined('APPLICATION_DOMAIN'))
+            throw new Zend_Exception('The APPLICATION_DOMAIN constant is not set with in application.ini');
+        
         $zendAutoloader = new \Zend_Application_Module_Autoloader(array(
                     'namespace' => 'Application_',
                     'basePath' => dirname(__FILE__),
@@ -40,32 +54,21 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap {
         Zend_Loader_Autoloader::autoload(str_replace('\\', '_', $className));
     }
 
+    // an APC backend is memory based and thus prefered, however it seems there are 
+    // interoperability problems between cli and apache_mod, which when you think about it aren't
+    // that strange. So for now I choose file based cause it works.
+    //$cache = Zend_Cache::factory('Core', 'Apc',
+    //                            array('automatic_serialization'=>true),
+    //                            array());
     function _initCache() {
-        
-        
         $cache = Zend_Cache::factory('Core', 'File',
                                     array('automatic_serialization'=>true),
                                     array('cache_dir'=>APPLICATION_PATH . '/../data/tmp'));
         
-        // an APC backend is memory based and thus prefered, however it seems there are 
-        // interoperability problems between cli and apache_mod, which when you think about it aren't
-        // that strange. So for now I choose file based cause it works.
-        //$cache = Zend_Cache::factory('Core', 'Apc',
-        //                            array('automatic_serialization'=>true),
-        //                            array());
-
-        //if (APPLICATION_ENV != 'production')
-        //    $cache->clean();
+        // if (APPLICATION_ENV != 'production')
+        //     $cache->clean();
 
         return $cache;
-    }
-
-
-    protected function _initSetConstants() {
-       if ($arrConstants = $this->getOption("constants"))
-            foreach ($arrConstants as $strName => $strValue)
-                if (!defined($strName))
-                    define($strName, $strValue);
     }
 
     protected function _initDoctype()

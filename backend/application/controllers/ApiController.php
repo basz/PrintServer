@@ -3,6 +3,12 @@
 class ApiController extends Zend_Controller_Action {
 
     public function init() {
+        if (!file_exists(APPLICATION_PATH . '/configs/printers-'.APPLICATION_DOMAIN.'.ini'))
+            throw new Zend_Exception('/configs/printers-'.APPLICATION_DOMAIN.'.ini does not exists');            
+
+        if (file_exists(APPLICATION_PATH . '/../data/database.sqlite') && !is_writable(APPLICATION_PATH . '/../data/database.sqlite'))
+            throw new Zend_Exception('../data/database.sqlite is not writable');            
+        
         $this->_helper->contextSwitch()
                 ->addActionContext('envelope', array('json', 'xml'))
                 ->addActionContext('status', array('json', 'xml'))
@@ -24,12 +30,12 @@ class ApiController extends Zend_Controller_Action {
             $this->_helper->viewRenderer->setNoRender();
 
             try {
-                $config = new Zend_Config_Ini( APPLICATION_PATH . '/configs/printers.ini', APPLICATION_ENV);
+                $config = new Zend_Config_Ini( APPLICATION_PATH . '/configs/printers-'.APPLICATION_DOMAIN.'.ini', APPLICATION_ENV);
                 $createPrinters = $config->__isset('printers') ? $config->printers->toArray() : array();
             } catch (Zend_Config_Exception $e) {
                 $createPrinters = array();
             }
-
+            
             $queued_jobs = $this->_em->getRepository('Application\Model\Entity\PrinterJob')->findBy(array('status' => 'cupsed'));
             foreach ($queued_jobs as $queued_job)
                 \Application\Model\PrintMaster::cancelJob($queued_job);
