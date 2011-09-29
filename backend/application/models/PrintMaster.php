@@ -6,6 +6,8 @@
 
 namespace Application\Model;
 
+
+
 /**
  * Description of PrintMaster
  *
@@ -13,6 +15,11 @@ namespace Application\Model;
  */
 class PrintMaster {
 
+    /**
+     * @var Zend_Log
+     */
+    private static $log;
+    
     // return int when ok or error object
     static function createJob($printer_id, $path) {
         $em = \Application_Api_Util_Bootstrap::getResource('doctrine')->getEntityManager();
@@ -31,9 +38,13 @@ class PrintMaster {
         } catch (\Zend_Pdf_Exception $e) {
             ob_end_clean();
             return array('message'=>'document not a PDF', 'code'=>4);
-        }
-
+           }
+           
+        \Application_Api_Util_Bootstrap::getResource('log')->log(sprintf('pdf received "%s"', $path), \Zend_Log::INFO);
+        
         if (DIRECT_POSTING) {
+            
+
             // create custom printer options
             $o = array();
 
@@ -46,7 +57,7 @@ class PrintMaster {
 
             $options = array();
 
-            $options[] = '-d "'.$printer->getCupsName().'"';
+            $options[] = '-d "' . $printer->getCupsName() . '"';
             $options[] = escapeshellarg($path);
 
             foreach ($o as $key => $value) {
@@ -56,16 +67,19 @@ class PrintMaster {
             $options = implode(' ', $options);
 
             //\Zend_Debug::dump('lp ' . $options);
-            $output = '';$result = '';
+            $output = '';
+            $result = '';
+
             exec('lp ' . $options, $output, $result);
-            
-            if ($result === 0 && preg_match('/^request id is ('.$printer->getCupsName().'\-[0-9]{1,8}).*$/', $output[0], $m)) {
+
+            if ($result === 0 && preg_match('/^request id is (' . $printer->getCupsName() . '\-[0-9]{1,8}).*$/', $output[0], $m)) {
+                \Application_Api_Util_Bootstrap::getResource('log')->log(sprintf('OK exec lp "%s"', $options), \Zend_Log::INFO);
                 return 0;
             } else {
+                \Application_Api_Util_Bootstrap::getResource('log')->log(sprintf('FAIL exec lp "%s"', $options), \Zend_Log::INFO);
                 return false;
-            }        
-            
-            } else {
+            }
+        } else {
             // create new job
             $job = new \Application\Model\Entity\PrinterJob();
             $job->setPrinter($printer);
@@ -73,9 +87,9 @@ class PrintMaster {
             $job->setBasename(\pathinfo($path, \PATHINFO_BASENAME));
             \Zend_Debug::dump($job, 'DEFINING NEW JOB');
             $em->persist($job);
-        
+
             $em->flush();
-        
+
             return $job->getId();
         }
     }
@@ -297,7 +311,41 @@ class PrintMaster {
             return TRUE;
         }
     }
+    
+    public static function doGarbageCollect($percentage = 1) {
+        if (rand(0, PHP_INT_MAX) <= PHP_INT_MAX * ($percentage / 100))
+            self::runGarbageCollect();
+    }
 
+    private static function runGarbageCollect() {
+        \Application_Api_Util_Bootstrap::getResource('log')->log("running garbage collection", \Zend_Log::INFO);
+
+        if (is_dir(APPLICATION_PATH . '/../data/tmp/')) {
+            $path = realpath(APPLICATION_PATH . '/../data/tmp/');
+
+            try {
+                $deleted = 0;
+                $stamp = \Zend_Date::now()->addHour(-36)->getTimestamp();
+                foreach (new \DirectoryIterator($path) as $fileinfo) {
+                    if ($fileinfo->isDot() || $fileinfo->isDir() || $fileinfo->getFilename() == 'PLACEHOLDER')
+                        continue;
+
+                    if ($fileinfo->getMTime() < $stamp) {
+                        $res = @unlink($fileinfo->getRealPath());
+                        if ($res === FALSE)
+                            throw new \Zend_Exception(sprintf('Unlink of %s failed', $fileinfo->getRealPath()));
+
+                        $deleted++;
+                    }
+                }
+
+                if ($deleted > 0)
+                    \Application_Api_Util_Bootstrap::getResource('log')->log(sprintf("%s temporary file(s) removed", $deleted), \Zend_Log::NOTICE);
+            } catch (\Zend_Exception $e) {
+                \Application_Api_Util_Bootstrap::getResource('log')->log(sprintf("exception while removing temporary files : %s", $e->getMessage()), \Zend_Log::WARN);
+            }
+        }
+    }
 }
 /*
 

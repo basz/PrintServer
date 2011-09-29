@@ -31,7 +31,7 @@ class CliController extends Zend_Controller_Action
         if (!DIRECT_POSTING) {
             $result = \Application\Model\PrintMaster::queueNewJobs();
             if ($result > 0) {
-                echo date('Y-m-d H:i:s') . ' ' . $result . ' job(s) send to CUPS' . PHP_EOL;
+                printf('%s %d Job(s) send to CUPS', date('Y-m-d H:i:s'), $result);
             }
         }
 
@@ -39,6 +39,8 @@ class CliController extends Zend_Controller_Action
 
         // report execution times
         echo sprintf("execution times (mode=%s); status = %01.4fs, cups = %01.4fs", (DIRECT_POSTING) ? 'direct on pdf submition' : 'pdf\'s are posted per interval', $statusTimed, $cupsTimed). PHP_EOL;
+        
+        \Application\Model\PrintMaster::doGarbageCollect(0.1 /* 0.1% = 1 op de 1000 keer */);
     }
 }
 

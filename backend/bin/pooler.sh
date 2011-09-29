@@ -43,18 +43,17 @@ fi
 function onexit() {
     # cleanup
     local exit_status=${1:-$?}
-    echo "exiting `basename "$0"` with $exit_status" 2>&1
+    echo "exiting pooler.sh (exit status $exit_status)" 2>&1
 
     rmdir /tmp/pooler.lock
-    
     exit $exit_status
 }
 
 if mkdir /tmp/pooler.lock 2>/dev/null
 then
-   echo "starting "`basename "$0"`
+   echo "starting pooler.sh"
    
-   while [ 1 ];
+   while [ -d /tmp/pooler.lock ];
    do 
       echo "running pooler.php --action=cli.update-status as _www"
       sudo -u _www $PHP_BIN -d safe_mode=Off -f $PREFIX/pooler.php -- "--action=cli.update-status"
@@ -62,7 +61,9 @@ then
       sleep 5;
    done
 
+   echo "exiting pooler.sh (/tmp/pooling.lock was deleted)" 2>&1
+   exit 0
 else
-   echo "exiting because pooling.sh already/still running" 2>&1
+   echo "exiting pooler.sh (pooling.sh already/still running)" 2>&1
    exit 0
 fi

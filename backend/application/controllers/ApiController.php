@@ -177,7 +177,7 @@ class ApiController extends Zend_Controller_Action {
                     $this->_forward('envelope', null, null, array('result' => false, 'error' => (object) $res));
                 }
 
-                return;
+//                return;
             } else {
                 $errors = $form->getErrors();
                 if (isset($errors['printer_id']) && in_array('isEmpty', $errors['printer_id']))
