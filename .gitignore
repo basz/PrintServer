@@ -1,3 +1,4 @@
 /nbproject/private/
 /backend/data/logs/*
 /backend/data/tmp/*
+/backend/data/database.sqlite
