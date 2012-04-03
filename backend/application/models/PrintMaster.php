@@ -1,5 +1,5 @@
 <?php
-/* 
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -19,7 +19,7 @@ class PrintMaster {
      * @var Zend_Log
      */
     private static $log;
-    
+
     // return int when ok or error object
     static function createJob($printer_id, $path) {
         $em = \Application_Api_Util_Bootstrap::getResource('doctrine')->getEntityManager();
@@ -39,11 +39,11 @@ class PrintMaster {
             ob_end_clean();
             return array('message'=>'document not a PDF', 'code'=>4);
            }
-           
+
         \Application_Api_Util_Bootstrap::getResource('log')->log(sprintf('pdf received "%s"', $path), \Zend_Log::INFO);
-        
+
         if (DIRECT_POSTING) {
-            
+
 
             // create custom printer options
             $o = array();
@@ -70,7 +70,7 @@ class PrintMaster {
             $output = '';
             $result = '';
 
-            exec('lp ' . $options, $output, $result);
+            exec('SOFTWARE= LANG=C lp ' . $options, $output, $result);
 
             if ($result === 0 && preg_match('/^request id is (' . $printer->getCupsName() . '\-[0-9]{1,8}).*$/', $output[0], $m)) {
                 \Application_Api_Util_Bootstrap::getResource('log')->log(sprintf('OK exec lp "%s"', $options), \Zend_Log::INFO);
@@ -93,23 +93,23 @@ class PrintMaster {
             return $job->getId();
         }
     }
-    
+
     static function queueNewJobs() {
         $em = \Application_Api_Util_Bootstrap::getResource('doctrine')->getEntityManager();
         $jobs = $em->getRepository('Application\Model\Entity\PrinterJob')->findBy(array('status' => 'new'));
 
         $count = 0;
-        
+
         foreach($jobs as $job) {
             $path = realpath(APPLICATION_PATH . '/../data/tmp/') . '/' . $job->getBasename();
-        
+
             if (!file_exists($path)) {
                 $job->setStatus('errorneous');
                 $em->persist($job);
 
                 continue;
             }
-            
+
             // create custom printer options
             $o = array();
             try {
@@ -122,7 +122,7 @@ class PrintMaster {
                 $em->persist($job);
                 continue;
             }
-            
+
             if (count($pdf->pages)) {
                 $w = $pdf->pages[0]->getWidth();
                 $h = $pdf->pages[0]->getHeight();
@@ -143,12 +143,12 @@ class PrintMaster {
 
             //\Zend_Debug::dump('lp ' . $options);
             $output = '';$result = '';
-            exec('lp ' . $options, $output, $result);
+            exec('SOFTWARE= LANG=C lp ' . $options, $output, $result);
             \Zend_Debug::dump($output, 'output'); // array("request id is CUPS_QUEUE_NAME-336 (1 file(s))")
-            //\Zend_Debug::dump($result, 'result'); // int(0) | int(1) 
+            //\Zend_Debug::dump($result, 'result'); // int(0) | int(1)
             if ($result === 0 && preg_match('/^request id is ('.$job->getPrinter()->getCupsName().'\-[0-9]{1,8}).*$/', $output[0], $m)) {
                 $job->setCupsJobId($m[1]);
-            
+
                 $job->setStatus('cupsed');
             } else {
                 $job->setStatus('errorneous');
@@ -156,16 +156,16 @@ class PrintMaster {
 
                 continue;
             }
-            
+
             $count++;
             $em->persist($job);
         }
-        
+
         $em->flush();
 
         return $count;
     }
-    
+
     static function cancelJob(\Application\Model\Entity\PrinterJob $job) {
         if ($job->getStatus() != 'cupsed')
             return;
@@ -178,7 +178,7 @@ class PrintMaster {
             if ($job->getPrinter())
                 exec(APPLICATION_PATH . '/../bin/cups/cancelJob.sh "' . $job->getPrinter()->getCupsName() . '" ' . $id, $output, $result);
         } catch (\Doctrine\ORM\EntityNotFoundException $e) {
-            
+
         }
 
         if ($result === 0) {
@@ -192,7 +192,7 @@ class PrintMaster {
 
     static function getDefinedPrinters() {
         $em = \Application_Api_Util_Bootstrap::getResource('doctrine')->getEntityManager();
-        
+
         $result = array();
         $printers = $em->getRepository('Application\Model\Entity\PrinterDefinition')->findAll();
         foreach($printers as $printer) {
@@ -206,9 +206,9 @@ class PrintMaster {
         $result = array();
 
         $output = array();
+
         exec(APPLICATION_PATH . '/../bin/cups/getDefinedCupsPrinters.sh', $output, $return);
         array_shift($output);
-       // print_r($output);
         foreach($output as $line) {
             if (preg_match('/^device for (.*?): (.*)$/', $line, $m)) {
                 //print_r($m);
@@ -218,13 +218,18 @@ class PrintMaster {
 
         return $result;
     }
-    
+
+    static function getPrinterOptions($printerName) {
+        exec(sprintf(APPLICATION_PATH . '/../bin/cups/getPrinterOptions.sh %s', escapeshellarg($printerName)), $output, $return);
+        return $output;
+    }
+
     static function getStatus($forceUpdate = false) {
         $cache = \Application_Api_Util_Bootstrap::getResource('Cache');
-        
+
         if ($forceUpdate)
             $cache->remove('status');
-        
+
         if ( ($status = $cache->load('status')) === false ) { // cache miss
             $status = self::_getStatus();
 
@@ -234,19 +239,19 @@ class PrintMaster {
 
         return $status;
     }
-    
+
     private static function _getStatus() {
         $em = \Application_Api_Util_Bootstrap::getResource('doctrine')->getEntityManager();
-        
+
         $result = (object) array('status'=>true, 'detail'=>array());
-        
+
         $printers = $em->getRepository('Application\Model\Entity\PrinterDefinition')->findAll();
 
         // FIRST CHECK THE CUPS STATUSSES
         foreach($printers as $printer) {
             $output = array();
             exec(APPLICATION_PATH . '/../bin/cups/getDefinedCupsStatus.sh "'.$printer->getCupsName().'"', $output);
-            
+
             if (isset($output[0]) AND strpos($output[0], $printer->getCupsName() . ' is ready') === 0)  {
                 $result->status = (true && $result->status);
             } else {
@@ -272,7 +277,7 @@ class PrintMaster {
                             $result->status = false;
                             $result->detail[] = "'" . $printer->getName() . "' is not responding to pings to '$ip'";
                         }
-                        
+
                         if ($pingable) {
                             $user = 'root';
                             $pass = 'public';
@@ -311,7 +316,7 @@ class PrintMaster {
             return TRUE;
         }
     }
-    
+
     public static function doGarbageCollect($percentage = 1) {
         if (rand(0, PHP_INT_MAX) <= PHP_INT_MAX * ($percentage / 100))
             self::runGarbageCollect();
@@ -375,5 +380,5 @@ LinePrinterHarkema-334  _www              3072   wo 23 mrt 21:11:37 2011
 
 
  *
- * 
+ *
  */

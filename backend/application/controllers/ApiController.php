@@ -4,11 +4,11 @@ class ApiController extends Zend_Controller_Action {
 
     public function init() {
         if (!file_exists(APPLICATION_PATH . '/configs/printers-'.APPLICATION_DOMAIN.'.ini'))
-            throw new Zend_Exception('/configs/printers-'.APPLICATION_DOMAIN.'.ini does not exists');            
+            throw new Zend_Exception('/configs/printers-'.APPLICATION_DOMAIN.'.ini does not exists');
 
         if (file_exists(APPLICATION_PATH . '/../data/database.sqlite') && !is_writable(APPLICATION_PATH . '/../data/database.sqlite'))
-            throw new Zend_Exception('../data/database.sqlite is not writable');            
-        
+            throw new Zend_Exception('../data/database.sqlite is not writable');
+
         $this->_helper->contextSwitch()
                 ->addActionContext('envelope', array('json', 'xml'))
                 ->addActionContext('status', array('json', 'xml'))
@@ -26,6 +26,7 @@ class ApiController extends Zend_Controller_Action {
      * setsup database
      */
     public function setupAction() {
+
         try {
             $this->_helper->viewRenderer->setNoRender();
 
@@ -35,7 +36,7 @@ class ApiController extends Zend_Controller_Action {
             } catch (Zend_Config_Exception $e) {
                 $createPrinters = array();
             }
-            
+
             $queued_jobs = $this->_em->getRepository('Application\Model\Entity\PrinterJob')->findBy(array('status' => 'cupsed'));
             foreach ($queued_jobs as $queued_job)
                 \Application\Model\PrintMaster::cancelJob($queued_job);
@@ -59,7 +60,7 @@ class ApiController extends Zend_Controller_Action {
                         $existInCups = true;
                         break;
                     }
-                    
+
                 if (!$existInCups) {
                     Zend_Debug::dump($cupsName, 'CONFIGURED QUEUE DOES NOT EXIST WITHIN CUPS');
                     continue;
@@ -70,10 +71,9 @@ class ApiController extends Zend_Controller_Action {
                 $printer->setName($name);
                 $printer->setCupsName($cupsName);
 
-                // getting printer options
-                $_printerOptions = array();
-                exec('lpoptions -p "' . $cupsPrinter->name . '"', $_printerOptions);
-               
+
+                $_printerOptions = \Application\Model\PrintMaster::getPrinterOptions($cupsPrinter->name);
+
                 if (count($_printerOptions)) {
                     $_printerOptions = implode(' ', $_printerOptions);
                     $printerOptions = $this->parsePrinterOptions($_printerOptions);

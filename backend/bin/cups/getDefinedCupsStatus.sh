@@ -4,5 +4,5 @@
 
 bin=`which lpq`
 
-$bin -P $1
+SOFTWARE= LANG=C lpstat -s $bin -P $1
 

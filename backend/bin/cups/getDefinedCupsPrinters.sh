@@ -29,5 +29,5 @@
 
 bin=`which lpstat`
 
-$bin -s
+SOFTWARE= LANG=C $bin -s
 

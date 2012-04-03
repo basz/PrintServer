@@ -14,9 +14,9 @@
  *
  * @category  Zend
  * @package   Zend_File_Transfer
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
- * @version   $Id: Abstract.php 22371 2010-06-04 20:09:44Z thomas $
+ * @version   $Id: Abstract.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -24,7 +24,7 @@
  *
  * @category  Zend
  * @package   Zend_File_Transfer
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Zend_File_Transfer_Adapter_Abstract
@@ -617,8 +617,6 @@ abstract class Zend_File_Transfer_Adapter_Abstract
     public function isValid($files = null)
     {
         $check = $this->_getFiles($files, false, true);
-        
-
         if (empty($check)) {
             return false;
         }
@@ -706,7 +704,7 @@ abstract class Zend_File_Transfer_Adapter_Abstract
         if (count($this->_messages) > 0) {
             return false;
         }
-                
+
         return true;
     }
 
