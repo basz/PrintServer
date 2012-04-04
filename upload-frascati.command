@@ -8,9 +8,10 @@ rsync --verbose --progress --compress --archive --delete-after \
 	  --exclude="/public/.htaccess" \
 	  --exclude="/data/logs/*" \
 	  --exclude="/data/tmp/*" \
+	  --exclude="/application/configs/application.ini" \
+	  --exclude="/application/configs/printers-*.ini" \
 	  --exclude="/application/models/entities/proxies/*" \
-          --exclude="/application/configs/application.ini" \
-          --exclude="/data/database.sqlite" \
+	  --exclude="/data/database.sqlite" \
 	  "$SOURCE_DIR/" \
 	  frascati@print.theatercafefrascati.nl:/Library/Server/Web/Data/Sites/nl.theatercafefrascati.print
 

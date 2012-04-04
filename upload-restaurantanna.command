@@ -9,6 +9,7 @@ rsync --verbose --progress --compress --archive --delete-after \
 	  --exclude="/data/logs/*" \
 	  --exclude="/data/tmp/*" \
 	  --exclude="/application/configs/application.ini" \
+	  --exclude="/application/configs/printers-*.ini" \
 	  --exclude="/application/models/entities/proxies/*" \
 	  --exclude="/data/database.sqlite" \
 	  "$SOURCE_DIR/" \
